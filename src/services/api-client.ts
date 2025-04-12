@@ -6,7 +6,7 @@ import { AuthResponse } from 'src/types/AuthResponse.type'
 import { getAccessToken, removeAccessTokenAndUser, setAccessToken, setUser } from 'src/utils/auth'
 
 const axiosInstance = axios.create({
-  baseURL: 'https://api-ecom.duthanhduoc.com',
+  baseURL: 'http://localhost:8080',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'

@@ -4,12 +4,23 @@ import useProductsQuery, { ProductsQuery } from 'src/hooks/useProductsQuery'
 import { AsideFilter } from './components/AsideFilter'
 import { Product } from './components/Product'
 import { SortProductList } from './components/SortProductList'
-
+import { useEffect, useState } from 'react'
+import axios from 'axios'
 const ProductList = () => {
   const productsQuery: ProductsQuery = useProductsQuery()
-
-  const { data } = useProducts(productsQuery)
-
+  const [products, setProducts] = useState([])
+  // const { data } = useProducts(productsQuery)
+  useEffect(() => {
+    axios
+      .get('/product/listProduct')
+      .then((response) => {
+        setProducts(Array.isArray(response.data?.data) ? response.data.data : [])
+        console.log('Response Products:', response)
+      })
+      .catch((error) => {
+        console.error('Error fetching products:', error)
+      })
+  }, [])
   return (
     <main className='bg-gray-200 py-6'>
       <div className='container'>
@@ -18,20 +29,17 @@ const ProductList = () => {
             <AsideFilter productsQuery={productsQuery} />
           </div>
           <div className='col-span-9'>
-            {data && (
-              <>
-                <SortProductList pageSize={data.data.pagination.page_size} productsQuery={productsQuery} />
-
-                <div className='mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'>
-                  {data.data.products.map((product) => (
-                    <div key={product._id} className='col-span-1'>
-                      <Product product={product} />
-                    </div>
-                  ))}
-                </div>
-                <Pagination pageSize={data.data.pagination.page_size} productsQuery={productsQuery} />
-              </>
-            )}
+            <div className='mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'>
+              {Array.isArray(products) && products.length > 0 ? (
+                products.map((product) => (
+                  <div className='col-span-1'>
+                    <Product product={product} />
+                  </div>
+                ))
+              ) : (
+                <p className='col-span-full text-center'>Không có sản phẩm nào.</p>
+              )}
+            </div>
           </div>
         </div>
       </div>

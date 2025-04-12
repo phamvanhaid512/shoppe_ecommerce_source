@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom'
+import axios from 'axios'
+import { useEffect, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import { ProductRating } from 'src/components/ProductRating'
 import pagePath from 'src/constants/path'
 import { Product as ProductType } from 'src/types/Product.type'
@@ -9,14 +11,26 @@ interface ProductProps {
 }
 
 const Product = ({ product }: ProductProps) => {
-  const nameId = generateNameId({ name: product.name, id: product._id })
+  // const { id } = useParams() // Lấy ID từ URL
+  // const [products, setProducts] = useState({})
+  // useEffect(() => {
+  //   axios
+  //     .get(`/blog/details/${id}`)
+  //     .then((response) => {
+  //       setProducts(response.data)
+  //       console.log('Response products:', response)
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error fetching products:', error)
+  //     })
+  // }, [id])
 
   return (
-    <Link to={`${pagePath.home}${nameId}`}>
+    <Link to={`/detail/product/${product.id}`}>
       <div className='overflow-hidden rounded-sm bg-white shadow transition-transform duration-100 hover:translate-y-[-0.1rem] hover:shadow-md'>
         <div className='relative w-full pt-[100%]'>
           <img
-            src={product.image}
+            src={product.logo}
             alt={product.name}
             className='absolute left-0 top-0 h-full w-full bg-white object-cover'
           />
@@ -26,7 +40,7 @@ const Product = ({ product }: ProductProps) => {
           <div className='mt-3 flex items-center'>
             <div className='max-w-[50%] truncate text-gray-500 line-through'>
               <span className='text-xs'>₫</span>
-              <span className='text-sm'>{formatToLocalizedValue(product.price_before_discount)}</span>
+              {/* <span className='text-sm'>{formatToLocalizedValue(product.price_before_discount)}</span> */}
             </div>
             <div className='ml-1 truncate text-orange'>
               <span className='text-xs'>₫</span>

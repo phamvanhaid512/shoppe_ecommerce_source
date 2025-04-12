@@ -1,7 +1,7 @@
 import { orderBy, sortBy } from 'src/constants/product'
 
 export interface Product {
-  _id: string
+  id: string
   images: string[]
   price: number
   rating: number
@@ -15,7 +15,7 @@ export interface Product {
     _id: string
     name: string
   }
-  image: string
+  logo: string
   createdAt: string
   updatedAt: string
 }
