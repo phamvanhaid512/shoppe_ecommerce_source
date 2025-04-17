@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useContext } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, createSearchParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -13,6 +13,8 @@ import { formatToLocalizedValue } from 'src/utils/utils'
 import { z } from 'zod'
 import { Input, InputSpacer } from '../Input'
 import { Popover } from '../Popover'
+import { message } from 'antd'
+import axios from 'axios'
 
 type FormData = z.infer<typeof searchTermSchema>
 
@@ -21,6 +23,7 @@ const PURCHASES_SHOWED = 5
 const Header = () => {
   const { isAuthenticated, profile } = useContext(AppContext)
   const logoutMutation = useLogout()
+  const [countOrder, setCountOrder] = useState({})
   const navigate = useNavigate()
   const { register, handleSubmit } = useForm<FormData>({
     defaultValues: { name: '' },
@@ -28,6 +31,37 @@ const Header = () => {
   })
   const { data: productsInBag } = usePurchases()
 
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    // Kiểm tra token
+    if (!token) {
+      message.error('Token không được cung cấp. Vui lòng đăng nhập!')
+      return
+    }
+
+    const fetchCount = async () => {
+      try {
+        const response = await axios.get(`/orders/get-count-cart`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        })
+        if (response.data == 200) {
+          const data = response.data
+          console.log('setCountCart', data)
+          setCountOrder({ count: data.count })
+          message.success('Lấy số lượng trong giỏ hàng thành công')
+        } else {
+          message.error('Lỗi khi lấy số lượng giỏ hàng')
+        }
+      } catch (error) {
+        message.error('Lấy số lượng giỏ hàng thất bại - serverError')
+      }
+      fetchCount()
+    }
+  }, [countOrder])
   const handleLogout = () => {
     logoutMutation.mutate()
     toast.success('Logout successfully!', { position: 'bottom-right' })

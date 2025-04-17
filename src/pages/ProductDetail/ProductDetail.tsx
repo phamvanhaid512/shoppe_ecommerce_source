@@ -1,18 +1,10 @@
-import DOMPurify from 'dompurify'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Button } from 'src/components/Button'
-import { ProductRating } from 'src/components/ProductRating'
-import { QuantityController } from 'src/components/QuantityController'
-import useAddToCart from 'src/hooks/useAddToCart'
-import useProduct from 'src/hooks/useProduct'
-import useProducts from 'src/hooks/useProducts'
-import { ProductsQuery } from 'src/hooks/useProductsQuery'
-import { Product as ProductType } from 'src/types/Product.type'
-import { formatToCompactValue, formatToLocalizedValue, getSaleRate } from 'src/utils/utils'
-import { Product } from '../ProductList/components/Product'
-import { useParams } from 'react-router-dom'
 import axios from 'axios'
-
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { Button } from 'src/components/Button'
+import useAddToCart from 'src/hooks/useAddToCart'
+import { message } from 'antd'
+import { QuantityController } from 'src/components/QuantityController'
 const ProductDetail = () => {
   // const [imageIndexes, setImageIndexes] = useState([0, 5])
   // const [currentImg, setCurrentImg] = useState('')
@@ -97,8 +89,36 @@ const ProductDetail = () => {
 
   // if (!product) return null
 
-  const handleAddToCart = () => {
-    addToCartMutation.mutate({ product_id: products.id, buy_count: Number(buyCount) })
+  const handlerAddToCart = async (product_id: number) => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      message.error('Token không được cung cấp, vui lòng đăng nhập')
+    }
+    try {
+      const response = await axios.post(
+        '/orders/add-to-cart/',
+        { product_id, price: 200, quantity: 3 },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
+      if ((response.status = 201)) {
+        await axios.get('/orders/get-count-cart/', {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        })
+        message.success('Bạn đã thêm vào giỏ hàng thành công')
+      } else {
+        message.error('Lỗi khi thêm vào giỏ hàng')
+      }
+    } catch (error) {
+      message.error('Lỗi khi thêm giỏ hàng - Server Error')
+    }
   }
 
   const { id } = useParams() // Lấy ID từ URL
@@ -199,14 +219,14 @@ const ProductDetail = () => {
                 </div>
               </div>
               <div className='mt-8 flex items-center'>
-                <div className='ml-10 capitalize text-gray-500'>quantity</div>
+                {/* <div className='ml-10 capitalize text-gray-500'>quantity</div> */}
                 {/* <QuantityController max={products.quantity} /> */}
                 {/* <div className='ml-6 text-sm text-gray-500'>{products.quantity} pieces available</div> */}
               </div>
               <div className='mt-8 flex items-center'>
                 <Button
                   className='flex h-12 items-center justify-center rounded-sm border border-orange bg-orange/10 px-5 capitalize text-orange shadow-sm hover:bg-orange/5'
-                  onClick={handleAddToCart}
+                  onClick={() => handlerAddToCart(products.id)}
                 >
                   <div className='flex items-center justify-center'>
                     <svg
