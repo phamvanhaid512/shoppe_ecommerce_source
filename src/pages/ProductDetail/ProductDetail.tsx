@@ -1,11 +1,24 @@
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { SetStateAction, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Button } from 'src/components/Button'
 import useAddToCart from 'src/hooks/useAddToCart'
 import { message } from 'antd'
+import { ProductRating } from 'src/components/ProductRating'
 import { QuantityController } from 'src/components/QuantityController'
+import { formatToCompactValue, formatToLocalizedValue, getSaleRate } from 'src/utils/utils'
+import { useCart } from 'src/hooks/useCart'
+import { useCount } from 'src/hooks/useCount'
 const ProductDetail = () => {
+  const { productInCart, fetchPurchases } = useCart()
+  useEffect(() => {
+    fetchPurchases()
+  }, [fetchPurchases])
+
+  const { countOrder, fetchCount } = useCount()
+  useEffect(() => {
+    fetchCount()
+  }, [fetchCount])
   // const [imageIndexes, setImageIndexes] = useState([0, 5])
   // const [currentImg, setCurrentImg] = useState('')
   const [buyCount, setBuyCount] = useState<string | number>(1)
@@ -106,12 +119,7 @@ const ProductDetail = () => {
         }
       )
       if ((response.status = 201)) {
-        await axios.get('/orders/get-count-cart/', {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          }
-        })
+        await fetchCount()
         message.success('Bạn đã thêm vào giỏ hàng thành công')
       } else {
         message.error('Lỗi khi thêm vào giỏ hàng')
@@ -134,6 +142,11 @@ const ProductDetail = () => {
         console.error('Error fetching products:', error)
       })
   }, [id])
+  const [quantity, setQuantity] = useState(1)
+  const handleQuantityChange = (newQuantity: SetStateAction<number>) => {
+    setQuantity(newQuantity)
+  }
+  const totalPrice = products?.price * quantity
   return (
     <div className='bg-gray-200 py-6'>
       <div className='container'>
@@ -196,32 +209,38 @@ const ProductDetail = () => {
               <div className='mt-8 flex items-center'>
                 <div className='flex items-center'>
                   <span className='mr-1 border-b border-b-orange text-orange'>{products?.rating.toFixed(1)}</span>
-                  {/* <ProductRating
-                    productRating={products.rating}
+                  <ProductRating
+                    productRating={products?.rating}
                     activeClassname='h-4 w-4 fill-orange text-orange'
                     inactiveClassname='h-4 w-4 fill-current text-gray-300'
-                    productRating={0}
-                  /> */}
+                    // productRating={0}
+                  />
                 </div>
                 <div className='mx-4 h-4 w-[1px] bg-gray-300'></div>
                 <div>
-                  {/* <span>{formatToCompactValue(product.sold)}</span>
+                  <span>{formatToCompactValue(products?.sold)}</span>
                   <span className='ml-1 capitalize text-gray-500'>sold</span>
                 </div>
               </div>
               <div className='mt-8 flex items-center bg-gray-50 px-5 py-4'>
                 <div className='text-gray-500 line-through'>
-                  {/* ₫{formatToLocalizedValue(product.price_before_discount)} */}
+                  ₫{formatToLocalizedValue(products?.price_before_discount)}
                 </div>
-                {/* <div className='ml-3 text-3xl font-medium text-orange'>₫{formatToLocalizedValue(product.price)}</div> */}
+                <div className='ml-3 text-3xl font-medium text-orange'>₫{formatToLocalizedValue(totalPrice || 0)}</div>
                 <div className='ml-4 rounded-sm bg-orange px-1 py-[2px] text-xs font-semibold uppercase text-white'>
-                  {/* {getSaleRate(product.price_before_discount, product.price)}% off */}
+                  {getSaleRate(products?.price_before_discount, products?.price)}% off
                 </div>
               </div>
               <div className='mt-8 flex items-center'>
-                {/* <div className='ml-10 capitalize text-gray-500'>quantity</div> */}
-                {/* <QuantityController max={products.quantity} /> */}
-                {/* <div className='ml-6 text-sm text-gray-500'>{products.quantity} pieces available</div> */}
+                <div className='ml-10 capitalize text-gray-500'>quantity</div>
+                <QuantityController
+                  max={products?.quantity}
+                  value={quantity}
+                  onIncrease={handleQuantityChange}
+                  onDecrease={handleQuantityChange}
+                  onTyping={handleQuantityChange}
+                />
+                <div className='ml-6 text-sm text-gray-500'>{products?.quantity} pieces available</div>
               </div>
               <div className='mt-8 flex items-center'>
                 <Button
@@ -276,7 +295,8 @@ const ProductDetail = () => {
         <div className='mt-8 bg-white p-4 shadow'>
           <div className='rounded bg-gray-50 p-4 text-lg uppercase text-slate-700'>product description</div>
           <div className='mx-4 mb-4 mt-12 text-sm leading-loose'>
-            {/* <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description) }} /> */}
+            {/* <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(products?.description) }} /> */}
+            {products?.content}
           </div>
         </div>
       </div>

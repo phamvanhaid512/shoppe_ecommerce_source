@@ -13,7 +13,7 @@ const usePurchases = () => {
       purchasesService.getAll({
         params: { status: purchasesListStatus.bag }
       }),
-    enabled: isAuthenticated
+    // enabled: isAuthenticated
   })
 }
 

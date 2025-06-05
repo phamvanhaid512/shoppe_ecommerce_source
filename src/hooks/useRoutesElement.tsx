@@ -9,6 +9,7 @@ import { Login } from 'src/pages/Login'
 import { ProductDetail } from 'src/pages/ProductDetail'
 import { ProductList } from 'src/pages/ProductList'
 import { Profile } from 'src/pages/Profile'
+import { Purchases } from 'src/pages/Purchases'
 import { SignUp } from 'src/pages/SignUp'
 
 const ProtectedRoute = () => {
@@ -36,7 +37,7 @@ const useRoutesElement = () => {
     },
     {
       path: '',
-      element: <ProtectedRoute />,
+      // element: <ProtectedRoute />,
       children: [
         {
           path: pagePath.profile,
@@ -64,7 +65,14 @@ const useRoutesElement = () => {
         </MainLayout>
       )
     },
-
+    {
+      path: pagePath.purchases,
+      element: (
+        <MainLayout>
+          <Purchases />
+        </MainLayout>
+      )
+    },
     {
       path: '',
       element: <RejectedRoute />,

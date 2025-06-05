@@ -15,15 +15,31 @@ import { Input, InputSpacer } from '../Input'
 import { Popover } from '../Popover'
 import { message } from 'antd'
 import axios from 'axios'
-
+import { useCount } from 'src/hooks/useCount'
 type FormData = z.infer<typeof searchTermSchema>
 
-const PURCHASES_SHOWED = 5
-
+const PURCHASES_SHOWED = 0
+export type ProductInCart = {
+  order_id: number
+  order_product_id: number
+  so_luong: number
+  product_id: number
+  product_name: string
+  product_logo: string
+  product_price: number
+  product_quantity: number
+  product_content: string
+}
 const Header = () => {
-  const { isAuthenticated, profile } = useContext(AppContext)
+  const { countOrder, fetchCount } = useCount()
+  useEffect(() => {
+    fetchCount()
+  }, [fetchCount])
+
+  // const { isAuthenticated, profile } = useContext(AppContext)
   const logoutMutation = useLogout()
-  const [countOrder, setCountOrder] = useState({})
+  const [productInCart, setProductInCart] = useState<ProductInCart[]>([])
+  // const [countOrder, setCountOrder] = useState({})
   const navigate = useNavigate()
   const { register, handleSubmit } = useForm<FormData>({
     defaultValues: { name: '' },
@@ -32,36 +48,73 @@ const Header = () => {
   const { data: productsInBag } = usePurchases()
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const fetchCartDetails = async () => {
+      const token = localStorage.getItem('token')
 
-    // Kiểm tra token
-    if (!token) {
-      message.error('Token không được cung cấp. Vui lòng đăng nhập!')
-      return
-    }
+      // Kiểm tra token
+      if (!token) {
+        message.error('Token không được cung cấp. Vui lòng đăng nhập!')
+        return
+      }
 
-    const fetchCount = async () => {
       try {
-        const response = await axios.get(`/orders/get-count-cart`, {
+        const response = await axios.get('orders/order-page', {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`
           }
         })
-        if (response.data == 200) {
-          const data = response.data
-          console.log('setCountCart', data)
-          setCountOrder({ count: data.count })
-          message.success('Lấy số lượng trong giỏ hàng thành công')
+
+        if (response.status === 200) {
+          setProductInCart(response.data.data)
+          // console.log('setProductInCart(response.data)', setProductInCart(response.data))
+          console.log('ProductInCart', productInCart)
+          console.log('ProductInCart', productInCart.length)
+
+          message.success('Lấy chi tiết giỏ hàng thành công')
         } else {
-          message.error('Lỗi khi lấy số lượng giỏ hàng')
+          message.error('Không thể lấy chi tiết giỏ hàng')
         }
       } catch (error) {
-        message.error('Lấy số lượng giỏ hàng thất bại - serverError')
+        console.error('Error fetching detail cart:', error)
+        message.error('Lỗi khi lấy chi tiết giỏ hàng - Server Error')
       }
-      fetchCount()
     }
-  }, [countOrder])
+
+    fetchCartDetails()
+  }, [])
+
+  // useEffect(() => {
+  //   const token = localStorage.getItem('token')
+
+  //   // Kiểm tra token
+  //   if (!token) {
+  //     message.error('Token không được cung cấp. Vui lòng đăng nhập!')
+  //     return
+  //   }
+
+  //   const fetchCount = async () => {
+  //     try {
+  //       const response = await axios.get(`/orders/get-count-cart`, {
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           Authorization: `Bearer ${token}`
+  //         }
+  //       })
+  //       if (response.data == 200) {
+  //         const data = response.data
+  //         console.log('setCountCart', data)
+  //         setCountOrder({ count: data.count })
+  //         message.success('Lấy số lượng trong giỏ hàng thành công')
+  //       } else {
+  //         message.error('Lỗi khi lấy số lượng giỏ hàng')
+  //       }
+  //     } catch (error) {
+  //       message.error('Lấy số lượng giỏ hàng thất bại - serverError')
+  //     }
+  //     fetchCount()
+  //   }
+  // }, [countOrder])
   const handleLogout = () => {
     logoutMutation.mutate()
     toast.success('Logout successfully!', { position: 'bottom-right' })
@@ -120,55 +173,55 @@ const Header = () => {
             </svg>
           </Popover>
 
-          {isAuthenticated && (
-            <Popover
-              className='ml-6 flex cursor-pointer items-center py-1 hover:text-gray-300'
-              renderPopover={
-                <div className='relative rounded-sm bg-white shadow-md'>
-                  <div className='flex w-36 flex-col'>
-                    <Link
-                      to={pagePath.profile}
-                      className='p-2.5 text-left font-medium hover:bg-gray-50 hover:text-teal-400'
-                    >
-                      <span>My Account</span>
-                    </Link>
-                    <Link
-                      to={pagePath.purchases}
-                      className='p-2.5 text-left font-medium hover:bg-gray-50 hover:text-teal-400'
-                    >
-                      <span>My Purchase</span>
-                    </Link>
-                    <button
-                      className='p-2.5 text-left font-medium hover:bg-gray-50 hover:text-teal-400'
-                      onClick={handleLogout}
-                    >
-                      <span>Logout</span>
-                    </button>
-                  </div>
+          {/* {isAuthenticated && ( */}
+          <Popover
+            className='ml-6 flex cursor-pointer items-center py-1 hover:text-gray-300'
+            renderPopover={
+              <div className='relative rounded-sm bg-white shadow-md'>
+                <div className='flex w-36 flex-col'>
+                  <Link
+                    to={pagePath.profile}
+                    className='p-2.5 text-left font-medium hover:bg-gray-50 hover:text-teal-400'
+                  >
+                    <span>My Account</span>
+                  </Link>
+                  <Link
+                    to={pagePath.purchases}
+                    className='p-2.5 text-left font-medium hover:bg-gray-50 hover:text-teal-400'
+                  >
+                    <span>My Purchase</span>
+                  </Link>
+                  <button
+                    className='p-2.5 text-left font-medium hover:bg-gray-50 hover:text-teal-400'
+                    onClick={handleLogout}
+                  >
+                    <span>Logout</span>
+                  </button>
                 </div>
-              }
-            >
-              <div className='mb-1 mr-2 h-5 w-5 flex-shrink-0'>
-                <img
-                  src='https://down-vn.img.susercontent.com/file/vn-11134004-7r98o-lml5m29l7lr37f_tn'
-                  alt='avatar'
-                  className='h-full w-full rounded-full object-cover'
-                />
               </div>
-              <div className='mb-1'>{profile?.email ?? ''}</div>
-            </Popover>
-          )}
-          {!isAuthenticated && (
-            <div className='ml-6 flex items-center py-1'>
-              <Link className='mx-3 mb-1 capitalize hover:text-gray-300' to={pagePath.signup}>
-                sign up
-              </Link>
-              <div className='h-4 border-r-[1px] border-r-white/40'></div>
-              <Link className='mx-3 mb-1 capitalize hover:text-gray-300' to={pagePath.login}>
-                login
-              </Link>
+            }
+          >
+            <div className='mb-1 mr-2 h-5 w-5 flex-shrink-0'>
+              <img
+                src='https://down-vn.img.susercontent.com/file/vn-11134004-7r98o-lml5m29l7lr37f_tn'
+                alt='avatar'
+                className='h-full w-full rounded-full object-cover'
+              />
             </div>
-          )}
+            {/* <div className='mb-1'>{profile?.email ?? ''}</div> */}
+          </Popover>
+          {/* )} */}
+          {/* {!isAuthenticated && ( */}
+          <div className='ml-6 flex items-center py-1'>
+            <Link className='mx-3 mb-1 capitalize hover:text-gray-300' to={pagePath.signup}>
+              sign up
+            </Link>
+            <div className='h-4 border-r-[1px] border-r-white/40'></div>
+            <Link className='mx-3 mb-1 capitalize hover:text-gray-300' to={pagePath.login}>
+              login
+            </Link>
+          </div>
+          {/* )} */}
         </div>
 
         <div className='mt-4 grid grid-cols-12 items-end gap-4'>
@@ -210,26 +263,26 @@ const Header = () => {
             className='col-span-1 justify-self-center'
             renderPopover={
               <div className='relative max-w-[400px] rounded-sm bg-white text-sm shadow-md'>
-                {productsInBag?.data.length ? (
+                {productInCart?.length ? (
                   <div className='p-2'>
                     <div className='capitalize text-gray-400'>recently added products</div>
                     <div className='mt-5'>
-                      {productsInBag.data.slice(0, PURCHASES_SHOWED).map((product) => {
+                      {productInCart.slice(0, PURCHASES_SHOWED).map((product) => {
                         return (
-                          <div className='mx-[-8px] mt-2 flex px-2 py-1 hover:bg-gray-100' key={product.product._id}>
+                          <div className='mx-[-8px] mt-2 flex px-2 py-1 hover:bg-gray-100' key={product.product_id}>
                             <div className='flex-shrink-0'>
                               <img
-                                src={product.product.image}
-                                alt={product.product.name}
+                                src={product.product_logo}
+                                alt={product.product_name}
                                 className='h-11 w-11 object-cover'
                               />
                             </div>
                             <div className='ml-2 flex-grow overflow-hidden'>
-                              <div className='truncate'>{product.product.name}</div>
+                              <div className='truncate'>{product.product_name}</div>
                             </div>
                             <div className='ml-2 flex-shrink-0'>
                               <span className='text-xs text-orange'>₫</span>
-                              <span className='text-orange'>{formatToLocalizedValue(product.price)}</span>
+                              <span className='text-orange'>{formatToLocalizedValue(product.product_price)}</span>
                             </div>
                           </div>
                         )
@@ -237,8 +290,8 @@ const Header = () => {
                     </div>
                     <div className='mt-6 flex items-center justify-between'>
                       <div className='text-xs capitalize text-gray-500'>
-                        {productsInBag.data.length > 5 && (
-                          <span>{productsInBag.data.length - PURCHASES_SHOWED} more products in cart</span>
+                        {productInCart.length > 5 && (
+                          <span>{productInCart.length - PURCHASES_SHOWED} more products in cart</span>
                         )}
                       </div>
                       <Link
